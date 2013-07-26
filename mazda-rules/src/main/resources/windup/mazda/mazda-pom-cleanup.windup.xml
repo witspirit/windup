@@ -1,0 +1,1193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:windup="http://www.jboss.org/schema/windup"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.jboss.org/schema/windup http://www.jboss.org/schema/windup.xsd">
+
+<!-- EXAMPLES: 
+
+	<windup:pipeline type="JAVA" id="java-extension-decorators">
+		<windup:java-classification regex="com.example.clz.ClzName$" description="Testing Extension Framework" />
+	</windup:pipeline>
+	
+	<windup:pipeline type="XML" id="xml-extension-decorators">
+		<windup:xpath-classification description="Windup Example" xpath="/windup:example">
+			<windup:namespace prefix="windup" uri="http://windup.com/example/namespace" />
+		</windup:xpath-classification>
+	</windup:pipeline>
+
+ -->
+    <windup:pipeline type="XML" id="xml-extension-decorators">
+
+        <windup:xpath-classification description="Maven EAR Pom" xpath="//pom:artifactId/text()[.  = 'maven-ear-plugin']">
+            <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+            <windup:decorators>
+                <windup:xpath-value xpath="//pom:plugin/pom:artifactId/text()[. = 'maven-ear-plugin']"
+                                    description="Check whether a static application.xml file is provided. It generally shouldn't, allowing it to be generated according to the POM lib config."
+                                    effort="1"
+                                    inline="false">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+                <windup:xpath-value xpath="//pom:plugin[./pom:artifactId/text() = 'maven-ear-plugin']/pom:configuration/pom:version/text()"
+                                    description="Override of POM Lib configuration - Drop the version element in the EAR config"
+                                    effort="1"
+                                    inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+                <windup:xpath-value xpath="//pom:plugin[./pom:artifactId/text() = 'maven-ear-plugin']/pom:configuration//pom:addDefaultImplementationEntries"
+                                    description="Override of POM Lib configuration - Drop the addDefaultImplementationEntries config"
+                                    effort="1"
+                                    inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+                <windup:xpath-value xpath="//pom:plugin[.//pom:execution/pom:phase/text() = 'deploy']"
+                                    description="Unexpected side-effect in mvn deploy phase. Consider removing it"
+                                    effort="1"
+                                    inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+            </windup:decorators>
+        </windup:xpath-classification>
+
+        <windup:xpath-classification description="Maven CXF Pom" xpath="//pom:dependency/pom:artifactId/text()[.  = 'org.apache.cxf']">
+            <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+            <windup:decorators>
+
+                <windup:xpath-value
+                        xpath="//pom:plugin/pom:artifactId/text()[. = 'cxf-java2ws-plugin']"
+                        description="The WSDL can just as well be generated at runtime, which is the preferred way. Consider removing this plugin from the build. Only in specific classloading circumstances this might bring a solution."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:project[not(//pom:DisableIBMJAXWSEngine)]"
+                        description="When using CXF, the WebSphere built-in JAX-WS engine needs to be disabled. Use the following snippet:
+                        &lt;code&gt;
+                        &amp;lt;plugin&amp;gt;
+                            &amp;lt;artifactId&amp;gt;maven-war-plugin&amp;lt;/artifactId&amp;gt;
+                            &amp;lt;configuration&amp;gt;
+                                &amp;lt;archive&amp;gt;
+                                    &amp;lt;manifestEntries&amp;gt;
+                                        &amp;lt;DisableIBMJAXWSEngine&amp;gt;true&amp;lt;/DisableIBMJAXWSEngine&amp;gt;
+                                    &amp;lt;/manifestEntries&amp;gt;
+                                &amp;lt;/archive&amp;gt;
+                            &amp;lt;/configuration&amp;gt;
+                        &amp;lt;/plugin&amp;gt;
+                        &lt;/code&gt;"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+            </windup:decorators>
+        </windup:xpath-classification>
+
+        <windup:xpath-classification description="Mazda Maven POM" xpath="//pom:parent/pom:groupId/text()[contains(., 'mazda')]">
+            <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+            <windup:decorators>
+                <!-- START: List of generated POM Lib version checks, see RuleGenerator-->
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'org.apache.cxf' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'com.mazdaeur.jee' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'com.mazdaeur.log4j' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'org.springframework.security' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'org.springframework.orm' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'org.springframework.test' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'org.springframework.orm.h4' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'org.apache.poi' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'com.atomikos.transactions' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'com.mazdaeur.logging' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'com.mazdaeur.base.core' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'org.springframework.web' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'org.springframework.batch' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency[./pom:artifactId/text() =  'org.springframework.essential' and ./pom:groupId/text() = 'com.mazdaeur']/pom:version/text()[. != '${pomlib.version}']"
+                        description="Inappropriate version reference ! You should use ${pomlib.version} to appropriately get the project root's version of the POM Lib"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <!-- END: List of generated POM Lib version checks -->
+                <!-- START: Generated list of XPath Values to detect usage of direct dependencies where a POM Lib is more appropriate. See RuleGenerator. -->
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.web.servlet' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.web"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.context' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.essential"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.stax2-api' and ./../../pom:groupId/text() = 'org.codehaus.woodstox']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.apache.cxf, org.springframework.batch"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.janino' and ./../../pom:groupId/text() = 'org.codehaus.janino']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.logging"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.velocity' and ./../../pom:groupId/text() = 'org.apache.velocity']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.security, org.springframework.web"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.slf4j-log4j12' and ./../../pom:groupId/text() = 'org.slf4j']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.log4j"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.antlr' and ./../../pom:groupId/text() = 'antlr']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.orm.h4, org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.test' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.test"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.ojdbc14' and ./../../pom:groupId/text() = 'com.oracle']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.test"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.geronimo-jsp_2.2_spec' and ./../../pom:groupId/text() = 'org.apache.geronimo.specs']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.spring-security-web' and ./../../pom:groupId/text() = 'org.springframework.security']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.security"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.geronimo-el_2.2_spec' and ./../../pom:groupId/text() = 'org.apache.geronimo.specs']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.geronimo-annotation_1.1_spec' and ./../../pom:groupId/text() = 'org.apache.geronimo.specs']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.atomikos-util' and ./../../pom:groupId/text() = 'com.atomikos']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.atomikos.transactions"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.dom4j-nodep' and ./../../pom:groupId/text() = 'dom4j']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.orm.h4, org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.geronimo-servlet_3.0_spec' and ./../../pom:groupId/text() = 'org.apache.geronimo.specs']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.geronimo-ws-metadata_2.0_spec' and ./../../pom:groupId/text() = 'org.apache.geronimo.specs']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.transactions' and ./../../pom:groupId/text() = 'com.atomikos']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.atomikos.transactions"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.transactions-api' and ./../../pom:groupId/text() = 'com.atomikos']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.atomikos.transactions"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.oxm' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.batch"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.geronimo-jpa_2.0_spec' and ./../../pom:groupId/text() = 'org.apache.geronimo.specs']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.geronimo-jaxrs_1.1_spec' and ./../../pom:groupId/text() = 'org.apache.geronimo.specs']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.FastInfoset' and ./../../pom:groupId/text() = 'com.sun.xml.fastinfoset']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.cxf"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.spring-security-cas' and ./../../pom:groupId/text() = 'org.springframework.security']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.security"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.spring-modules-validation' and ./../../pom:groupId/text() = 'org.springmodules']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.batch"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.jettison' and ./../../pom:groupId/text() = 'org.codehaus.jettison']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.batch"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.woodstox-core-asl' and ./../../pom:groupId/text() = 'org.codehaus.woodstox']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.apache.cxf, org.springframework.batch"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.freemarker' and ./../../pom:groupId/text() = 'org.freemarker']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.base.core"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.poi-ooxml' and ./../../pom:groupId/text() = 'org.apache.poi']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.poi"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.javassist' and ./../../pom:groupId/text() = 'org.javassist']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.orm.h4"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.expression' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.essential"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.jdbc' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.orm.h4, org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.commons-lang' and ./../../pom:groupId/text() = 'org.apache.commons']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.essential"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.javassist' and ./../../pom:groupId/text() = 'javassist']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.transactions-jta' and ./../../pom:groupId/text() = 'com.atomikos']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.atomikos.transactions"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.httpasyncclient' and ./../../pom:groupId/text() = 'org.apache.httpcomponents']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.cxf"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.core' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.essential"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.slf4j-api' and ./../../pom:groupId/text() = 'org.slf4j']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: com.mazdaeur.logging, com.mazdaeur.log4j"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.ehcache-core' and ./../../pom:groupId/text() = 'net.sf.ehcache']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.orm.h4"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.edtFTPj' and ./../../pom:groupId/text() = 'com.enterprisedt']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.base.core"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.jaxen-nodep' and ./../../pom:groupId/text() = 'jaxen']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.javax.inject' and ./../../pom:groupId/text() = 'javax.inject']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.beans' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.essential"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.commons-digester' and ./../../pom:groupId/text() = 'org.apache.commons']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.base.core"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.aopalliance' and ./../../pom:groupId/text() = 'aopalliance']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.essential"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.jsr173' and ./../../pom:groupId/text() = 'javax.xml']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.batch"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.logback-core' and ./../../pom:groupId/text() = 'ch.qos.logback']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.logging"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.neethi' and ./../../pom:groupId/text() = 'org.apache.neethi']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.cxf"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.transaction' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.orm.h4, org.springframework.security, org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.jstl' and ./../../pom:groupId/text() = 'org.apache.geronimo.bundles']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.spring-security-core' and ./../../pom:groupId/text() = 'org.springframework.security']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.security"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.velocity-tools-view' and ./../../pom:groupId/text() = 'org.apache.velocity']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.web"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.poi-ooxml-schemas' and ./../../pom:groupId/text() = 'org.apache.poi']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.poi"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.cxf-bundle' and ./../../pom:groupId/text() = 'org.apache.cxf']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.cxf"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.hibernate-commons-annotations' and ./../../pom:groupId/text() = 'org.hibernate']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.orm.h4"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.hamcrest-core' and ./../../pom:groupId/text() = 'org.hamcrest']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.test"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.objenesis' and ./../../pom:groupId/text() = 'org.objenesis']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.test"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.spring-security-remoting' and ./../../pom:groupId/text() = 'org.springframework.security']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.security"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.xmlschema' and ./../../pom:groupId/text() = 'org.apache.ws.commons']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.cxf"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.spring-security-config' and ./../../pom:groupId/text() = 'org.springframework.security']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.security"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.web' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.web"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.geronimo-jta_1.1_spec' and ./../../pom:groupId/text() = 'org.apache.geronimo.specs']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.transactions-hibernate3' and ./../../pom:groupId/text() = 'com.atomikos']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.atomikos.transactions"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.httpcore' and ./../../pom:groupId/text() = 'org.apache.httpcomponents']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.cxf"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.commons-beanutils' and ./../../pom:groupId/text() = 'org.apache.commons']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.base.core"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'mum-client' and ./../../pom:groupId/text() = 'com.mazdaeur.mum']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.security"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'cts2-client' and ./../../pom:groupId/text() = 'com.mazdaeur.cts2']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.security"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.castor-xml' and ./../../pom:groupId/text() = 'org.codehaus.castor']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.base.core"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.spring-batch-infrastructure' and ./../../pom:groupId/text() = 'org.springframework.batch']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.batch"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.hibernate-validator' and ./../../pom:groupId/text() = 'org.hibernate']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.orm.h4, org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.poi' and ./../../pom:groupId/text() = 'org.apache.poi']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.poi"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'mazda-common' and ./../../pom:groupId/text() = 'com.mazdaeur.common']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.essential"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.junit' and ./../../pom:groupId/text() = 'junit']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.test"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.logback-classic' and ./../../pom:groupId/text() = 'ch.qos.logback']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.logging"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.httpcore-nio' and ./../../pom:groupId/text() = 'org.apache.httpcomponents']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.cxf"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.cas-client-core' and ./../../pom:groupId/text() = 'org.jasig.cas']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.security"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.transactions-jdbc' and ./../../pom:groupId/text() = 'com.atomikos']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.atomikos.transactions"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.log4j' and ./../../pom:groupId/text() = 'log4j']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.log4j"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.activation' and ./../../pom:groupId/text() = 'javax.activation']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.validation-api' and ./../../pom:groupId/text() = 'javax.validation']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.hibernate-entitymanager' and ./../../pom:groupId/text() = 'org.hibernate']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.orm.h4"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.mail' and ./../../pom:groupId/text() = 'javax.mail']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.hamcrest-library' and ./../../pom:groupId/text() = 'org.hamcrest']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.test"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.aspectjrt' and ./../../pom:groupId/text() = 'org.aspectj']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.security, org.springframework.batch, org.springframework.essential"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.commons-codec' and ./../../pom:groupId/text() = 'org.apache.commons']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.security"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.spring-batch-core' and ./../../pom:groupId/text() = 'org.springframework.batch']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.batch"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.xmlbeans' and ./../../pom:groupId/text() = 'org.apache.xmlbeans']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: com.mazdaeur.base.core, org.apache.poi"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.transactions-jms' and ./../../pom:groupId/text() = 'com.atomikos']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.atomikos.transactions"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.commons-io' and ./../../pom:groupId/text() = 'org.apache.commons']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.batch, org.springframework.essential"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.jms' and ./../../pom:groupId/text() = 'javax.jms']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.orm' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.orm.h4, org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.jcifs' and ./../../pom:groupId/text() = 'jcifs']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.base.core"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.httpclient' and ./../../pom:groupId/text() = 'org.apache.httpcomponents']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.cxf"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.xstream' and ./../../pom:groupId/text() = 'org.springframework.batch']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.batch, org.springframework.test"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.geronimo-jaxws_2.2_spec' and ./../../pom:groupId/text() = 'org.apache.geronimo.specs']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.jee"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.geronimo-jaxws' and ./../../pom:groupId/text() = 'org.apache.geronimo']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.apache.cxf"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.ehcache' and ./../../pom:groupId/text() = 'net.sf.ehcache']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.hibernate-core' and ./../../pom:groupId/text() = 'org.hibernate']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.orm.h4, org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.hibernate-ehcache' and ./../../pom:groupId/text() = 'org.hibernate']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.orm.h4"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.spring-batch-test' and ./../../pom:groupId/text() = 'org.springframework.batch']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.batch"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.mockito-core' and ./../../pom:groupId/text() = 'org.mockito']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.test"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.commons-collections' and ./../../pom:groupId/text() = 'org.apache.commons']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.orm.h4, org.springframework.essential, org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.jcl-over-slf4j' and ./../../pom:groupId/text() = 'org.slf4j']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: com.mazdaeur.logging, com.mazdaeur.log4j"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.jboss-logging' and ./../../pom:groupId/text() = 'org.jboss.logging']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.orm.h4"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.cglib-nodep' and ./../../pom:groupId/text() = 'cglib']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.essential, org.springframework.orm"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.aop' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.essential"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.itext' and ./../../pom:groupId/text() = 'com.lowagie']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: com.mazdaeur.base.core"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.aspectjweaver' and ./../../pom:groupId/text() = 'org.aspectj']"
+                        description="This dependency should probably not be used directly. Consider this POM lib instead: org.springframework.essential"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.org.springframework.context.support' and ./../../pom:groupId/text() = 'org.springframework']"
+                        description="This dependency should probably not be used directly. Consider one of these POM libs instead: org.springframework.security, org.springframework.web"
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <!-- END: Generated list of XPath Values to detect usage of direct dependencies where a POM Lib is more appropriate. See RuleGenerator. -->
+                <!-- START: Generated list of XPath Values to detect POM lib dependencies that are already part of another POM lib dependency. See RuleGenerator. -->
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'org.springframework.security' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.base.core' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="org.springframework.security is already included in com.mazdaeur.base.core. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.jee' and ./../../pom:scope/text() = 'test' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'org.springframework.test' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="com.mazdaeur.jee is already included in org.springframework.test. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'org.springframework.essential' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.base.core' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="org.springframework.essential is already included in com.mazdaeur.base.core. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'org.springframework.essential' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'org.springframework.orm.h4' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="org.springframework.essential is already included in org.springframework.orm.h4. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'org.springframework.essential' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'org.springframework.security' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="org.springframework.essential is already included in org.springframework.security. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'org.springframework.essential' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'org.springframework.batch' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="org.springframework.essential is already included in org.springframework.batch. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'org.springframework.essential' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'org.springframework.web' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="org.springframework.essential is already included in org.springframework.web. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'org.springframework.essential' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'org.springframework.orm' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="org.springframework.essential is already included in org.springframework.orm. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'org.springframework.web' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.base.core' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="org.springframework.web is already included in com.mazdaeur.base.core. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'org.springframework.web' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'org.apache.cxf' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="org.springframework.web is already included in org.apache.cxf. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'org.springframework.orm' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'com.mazdaeur.base.core' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="org.springframework.orm is already included in com.mazdaeur.base.core. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//pom:dependency/pom:artifactId/text()[. = 'org.springframework.orm' and ./../../pom:groupId/text() = 'com.mazdaeur' and //pom:dependency/pom:artifactId/text()[. = 'org.springframework.batch' and ./../../pom:groupId/text() = 'com.mazdaeur']]"
+                        description="org.springframework.orm is already included in org.springframework.batch. Consider removing this redundant dependency."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+
+                <!-- END: Generated list of XPath Values to detect POM lib dependencies that are already part of another POM lib dependency. See RuleGenerator. -->
+
+
+                <!-- Could perhaps be restricted to POM libs -->
+                <windup:xpath-value
+                        xpath="//pom:dependency//pom:exclusions"
+                        description="Exclusions should typically not be necessary. For the common cases where this is required appropriate POM Libs are available. Please review."
+                        effort="2"
+                        inline="true">
+                    <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
+                </windup:xpath-value>
+            </windup:decorators>
+        </windup:xpath-classification>
+
+    </windup:pipeline>
+ 
+</beans>	
+			
