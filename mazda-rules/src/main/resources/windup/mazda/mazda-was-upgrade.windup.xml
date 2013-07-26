@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:windup="http://www.jboss.org/schema/windup"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.jboss.org/schema/windup http://www.jboss.org/schema/windup.xsd">
+
+<!-- EXAMPLES: 
+
+	<windup:pipeline type="JAVA" id="java-extension-decorators">
+		<windup:java-classification regex="com.example.clz.ClzName$" description="Testing Extension Framework" />
+	</windup:pipeline>
+	
+	<windup:pipeline type="XML" id="xml-extension-decorators">
+		<windup:xpath-classification description="Windup Example" xpath="/windup:example">
+			<windup:namespace prefix="windup" uri="http://windup.com/example/namespace" />
+		</windup:xpath-classification>
+	</windup:pipeline>
+
+ -->
+    <windup:pipeline type="XML" id="mazda-was-upgrade-xml">
+
+        <windup:xpath-classification description="Spring Security Context" xpath="/b:beans/@xsi:schemaLocation[contains(., 'spring-security-3.0.xsd')]">
+            <windup:namespace prefix="b" uri="http://www.springframework.org/schema/beans" />
+            <windup:namespace prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance" />
+
+            <windup:decorators>
+                <windup:xpath-value xpath="/b:beans/@xsi:schemaLocation[contains(., 'spring-security-3.0.xsd')]"
+                                    description="Adapt to spring-security-3.1.xsd"
+                                    effort="1"
+                                    inline="true">
+                    <windup:namespace prefix="b" uri="http://www.springframework.org/schema/beans" />
+                    <windup:namespace prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance" />
+                    <windup:namespace prefix="security" uri="http://www.springframework.org/schema/security" />
+                </windup:xpath-value>
+
+                <windup:xpath-value xpath="//@filters[.='none']"
+                                    description="filters='none' is no longer supported. The equivalent alternative is a separate http element: &lt;code&gt;
+&amp;lt;security:http security=&amp;quot;none&amp;quot; pattern=&amp;quot;/example/**&amp;quot; /&amp;gt;
+&lt;/code&gt;"
+                                    effort="1"
+                                    inline="true">
+                    <windup:namespace prefix="b" uri="http://www.springframework.org/schema/beans" />
+                    <windup:namespace prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance" />
+                    <windup:namespace prefix="security" uri="http://www.springframework.org/schema/security" />
+                </windup:xpath-value>
+
+                <windup:xpath-value xpath="//security:intercept-url/@pattern[./../@filters[.='none'] and contains(., 'wsdl')]"
+                                    description="Please review to apply the recommended way to expose WSDL files at &lt;a href=&quot;https://mapps.mazdaeur.com/wiki/display/UMT/Securing+a+webservice+with+Spring+Security+3.1+and+MUM#SecuringawebservicewithSpringSecurity3.1andMUM-Un-protectWSDLfiles&quot;&gt;Unprotect WSDL Files&lt;/a&gt;"
+                                    effort="1"
+                                    inline="true">
+                    <windup:namespace prefix="b" uri="http://www.springframework.org/schema/beans" />
+                    <windup:namespace prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance" />
+                    <windup:namespace prefix="security" uri="http://www.springframework.org/schema/security" />
+                </windup:xpath-value>
+
+                <windup:xpath-value xpath="//security:http[.//security:intercept-url/@pattern[contains(., '/services/') and ./../@access = 'IS_AUTHENTICATED_FULLY'] and not(.//security:intercept-url[contains(./@pattern, 'stylesheet') and ./@access = 'IS_AUTHENTICATED_ANONYMOUSLY'])]"
+                                    description="It might be convenient for other developers to have easy access to the service listing. Consider adding: &lt;code&gt;
+&amp;lt;security:intercept-url pattern=&amp;quot;\A/services/?/?(\?stylesheet=1)?\Z&amp;quot; method=&amp;quot;GET&amp;quot; access=&amp;quot;IS_AUTHENTICATED_ANONYMOUSLY&amp;quot;/&amp;gt;
+&lt;/code&gt;"
+                                    effort="0"
+                                    inline="true">
+                    <windup:namespace prefix="b" uri="http://www.springframework.org/schema/beans" />
+                    <windup:namespace prefix="xsi" uri="http://www.w3.org/2001/XMLSchema-instance" />
+                    <windup:namespace prefix="security" uri="http://www.springframework.org/schema/security" />
+                </windup:xpath-value>
+
+            </windup:decorators>
+        </windup:xpath-classification>
+
+        <windup:xpath-classification description="Java EE 5 Web Archive" xpath="/jee:web-app/@version[. = '2.5']">
+            <windup:namespace prefix="jee" uri="http://java.sun.com/xml/ns/javaee"/>
+
+            <windup:decorators>
+                <windup:xpath-value
+                        xpath="/jee:web-app/@version[. = '2.5']"
+                        description="For Java EE 5 and 6 archives, WebSphere expects a new format for binding files. Summarized: The .xmi files have to be renamed to .xml files. In addition, the syntax
+                        for resource binding and web settings has been simplified. Since finding clear documentation on the IBM website is virtually impossible, the recommended migration advice is to
+                        have a look at binding files that have already been migrated. (E.g. inc-service). For those daring to check out the IBM documentation have a try at :
+                         &lt;ul&gt;
+                          &lt;li&gt;&lt;a href=&quot;http://pic.dhe.ibm.com/infocenter/wasinfo/v8r5/index.jsp?topic=%2Fcom.ibm.websphere.nd.doc%2Fae%2Fcrun_app_bindings.html&quot;&gt;Application Bindings&lt;/a&gt;&lt;/li&gt;
+                          &lt;li&gt;&lt;a href=&quot;http://pic.dhe.ibm.com/infocenter/wasinfo/v8r0/index.jsp?topic=%2Fcom.ibm.websphere.express.doc%2Finfo%2Fexp%2Fae%2Frweb_jspreloading.html&quot;&gt;JSP Reloading settings&lt;/a&gt;&lt;/li&gt;
+                        &lt;/ul&gt;
+                         "
+                        effort="10"
+                        inline="false">
+                    <windup:namespace prefix="jee" uri="http://java.sun.com/xml/ns/javaee"/>
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="/jee:web-app/@version[. = '2.5' and not(./../@metadata-complete)]"
+                        description="In Java EE 5 configuration is possible via annotations. If the web.xml should be used and no annotation scanning is to be performed, add the attribute: metadata-complete=&quot;true&quot;. However, if annotations are used, ensure there is no conflict between the web.xml and the annotations and set the metadata-complete attribute to true. If you omit it, WebSphere will ask about it."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="jee" uri="http://java.sun.com/xml/ns/javaee"/>
+                </windup:xpath-value>
+
+                <windup:xpath-value
+                        xpath="//jee:resource-ref/@id"
+                        description="With the simplified resource binding configuration of WebSphere these ids are no longer required. The res-ref-name will be used to identify the resource binding."
+                        effort="1"
+                        inline="true">
+                    <windup:namespace prefix="jee" uri="http://java.sun.com/xml/ns/javaee"/>
+                </windup:xpath-value>
+            </windup:decorators>
+        </windup:xpath-classification>
+
+
+        <windup:xpath-classification description="Java EE 6 Web Archive" xpath="/jee:web-app/@version[. = '3.0']" effort="10">
+            <windup:namespace prefix="jee" uri="http://java.sun.com/xml/ns/javaee"/>
+
+            <!-- This topic remains open as we have not encountered such cases yet -->
+
+        </windup:xpath-classification>
+
+    </windup:pipeline>
+ 
+</beans>	
+			

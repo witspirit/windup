@@ -18,7 +18,7 @@
 	</windup:pipeline>
 
  -->
-    <windup:pipeline type="XML" id="xml-extension-decorators">
+    <windup:pipeline type="XML" id="mazda-pom-cleanup">
 
         <windup:xpath-classification description="Maven EAR Pom" xpath="//pom:artifactId/text()[.  = 'maven-ear-plugin']">
             <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
