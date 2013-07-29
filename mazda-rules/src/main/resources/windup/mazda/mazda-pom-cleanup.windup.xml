@@ -41,8 +41,8 @@
                                     inline="true">
                     <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
                 </windup:xpath-value>
-                <windup:xpath-value xpath="//pom:plugin[.//pom:execution/pom:phase/text() = 'deploy']"
-                                    description="Unexpected side-effect in mvn deploy phase. Consider removing it"
+                <windup:xpath-value xpath="//pom:plugin[.//pom:execution/pom:phase/text() = 'deploy' and not(./../../../../pom:profile)]"
+                                    description="Unexpected side-effect in mvn deploy phase. Consider removing it or move it to a profile to avoid accidental activation."
                                     effort="1"
                                     inline="true">
                     <windup:namespace prefix="pom" uri="http://maven.apache.org/POM/4.0.0" />
